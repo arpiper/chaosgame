@@ -1,0 +1,319 @@
+<div id="canvas-container">
+  <div class="user-inputs">
+    <div class="variables">
+      <label for="#vertices">Vertices:</label>
+      <select name="vertices" id="vertices" on:change="updateVertices(this.value)" bind:value="vertices">
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+      </select>
+      <label for="runtime">Iterations:</label>
+      <input id="runtime" type="number" name="runtime" bind:value="runtime">
+      <label for="rule" >Proportion:{{ formatNum(rule, 2) }}</label>
+      <input id="rule" type="range" min="0" max="1" bind:value="rule" step="0.01" >
+      <input type="checkbox" checked id="animate" name="animate" on:change="animate()">
+      <label for="animate">Animate</label>
+      <input id="midpoint" type="radio" bind:group="method" name="midpoint" value="midpoint">
+      <label for ="midpoint">Method 1</label>
+      <input id="endpoint" type="radio" bind:group="method" name="endpoint" value="endpoint">
+      <label for="endpoint">Method 2</label>
+      <input type="button" value="Go" on:click="runChaosGame()">
+      <input type="button" value="Stop" on:click="stopChaosGame()">
+      <input type="button" value="Clear" on:click="drawShape()">
+      <input type="button" value="Step" on:click="stepThrough()">
+
+    </div>
+
+    <div class="vertices">
+      {{#each points as point, i}}
+        <span class="label">{{ indexToAlpha(i) }}:</span>
+        <input type="number" bind:value="point.x" id="point-{{i}}-x" on:change="drawShape()">
+        <input type="number" bind:value="point.y" id="point-{{i}}-y" on:change="drawShape()">
+      {{/each}}
+    </div>
+    <span >Iterations: {{ counter }}</span>
+  </div>
+  <canvas id="chaos">
+  </canvas>
+</div>
+
+<style>
+#canvas-container {
+  width: 100%;
+  height: 100%;
+}
+#chaos {
+  margin: 0 auto;
+  display: block;
+}
+.user-inputs {
+  width: 80%;
+  margin: 0 auto;
+}
+.user-inputs div {
+  text-align: center;
+}
+input[type='number'] {
+  width: 50px;
+  margin: 5px;
+}
+input[name='runtime'] {
+  width: 75px;
+}
+</style>
+
+<script>
+export default {
+  // computed values for some?
+  data() {
+    return {
+      height: 0,
+      width: 0,
+      ctx: undefined,
+      vertices: 3,
+      runtime: 1000,
+      points: [{x: 0, y: 200},{x: -225, y: -150},{x: 225, y: -150}],
+      point: {x:0, y:0},
+      intervalID: 0,
+      counter: 0,
+      animate: true, 
+      rule: .5,
+      method: "midpoint",
+    };
+  },
+
+  oncreate() {
+    let c = document.getElementById("chaos");
+    let ctx = c.getContext("2d");
+    let container = document.getElementById("canvas-container");
+    c.height = container.offsetHeight * .8;
+    c.width = container.offsetWidth* .8;
+    this.get("points").forEach((v,i) => {
+      if (v.x > c.width/2 || v.x < -c.width/2) {
+        v.x = c.width/4 * (v.x / Math.abs(v.x));
+      }
+    });
+    ctx.translate(c.width / 2, c.height / 2);
+    this.set({height: c.height, width: c.width, ctx: ctx});
+    this.drawAxes();
+    this.drawShape();
+  },
+
+  ondestroy() {
+  },
+
+  helpers: {
+    indexToAlpha: function(num) {
+      return String.fromCharCode(65+num);
+    },
+    formatNum: function(num, p) {
+      return num.toPrecision(p);
+    }
+  },
+
+  methods: {
+    animate: function() {
+      let a = this.get("animate");
+      this.set({animate: !a});
+    },
+
+    updateVertices: function(vertices) {
+      this.clearCanvas();
+      let p = this.get("points");
+      let d = vertices - p.length;
+      if (d > 0) {
+        for (var i = 0; i < d; i++) {
+          p.push({x: 10*vertices, y: 10*vertices});
+        }
+      } else if (d < 0) {
+        p.splice(d, Math.abs(d));
+      }  
+      this.set({points:p});
+      this.drawShape();
+    },
+
+    // pick one of the available points to move towards.
+    chooseStart: function() {
+      let ctx, x, y, p;
+      ctx = this.get("ctx");
+      x = Math.floor(Math.random() * this.get("width"));
+      y = Math.floor(Math.random() * this.get("height"));
+      p = {x:x, y:y};
+      this.set({point: p});
+      this.drawPoint(p,2);
+    },
+
+    chooseVertex: function() {
+      let n = this.get("vertices");
+      let r = Math.floor(Math.random() * n);
+      return this.get("points")[r];
+    },
+
+    // calculate the middle point between two given values.
+    getMidPoint: function(a,b) {
+      let r = this.get("rule");
+      let xdif = (a.x + b.x) * (r);
+      let ydif = (a.y + b.y) * (r);
+      this.set({point: {x: xdif, y: ydif}});
+      return {x: xdif, y: ydif};
+    },
+
+    // calculate distance between points.
+    getDistance: function(a,b) {
+      let xdif = (a.x - b.x) ** 2;
+      let ydif = (a.y - b.y) ** 2;
+      let c2 = xdif + ydif;
+      return Math.sqrt(c2);
+    },
+
+    // get a (x,y) point distance from start based on the 'rule'
+    getPoint: function(start, direction) {
+      let x, y, r, p;
+      r = this.get("rule");
+      x = start.x - direction.x;
+      y = start.y - direction.y;
+      p = {
+        x: start.x - (x * (1-r)),
+        y: start.y - (y * (1-r)),
+      };
+      return p;
+    },
+
+    // draw a point on the canvas.
+    drawPoint: function(p, size, color) {
+      let ctx = this.get("ctx");
+      if (color !== undefined) {
+        ctx.fillStyle = color;
+        ctx.strokeSyle = color;
+      }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, size, 0, 2*Math.PI);
+      ctx.fill();
+    },
+
+    // plot the number of points on the canvas.
+    drawShape: function() {
+      this.clearCanvas();
+      this.get("points").forEach((v,i,a) => {
+        this.drawPoint(v,5,"#f00");
+        this.labelPoint({x:v.x + 5, y:v.y+5}, String.fromCharCode(65+i));
+      });
+    },
+
+    drawAxes: function() {
+      let ctx = this.get("ctx");
+      let w = this.get("width");
+      let h = this.get("height");
+      ctx.beginPath();
+      ctx.moveTo(-(w / 2), 0);
+      ctx.lineTo((w / 2), 0);
+      ctx.moveTo(0, -(h / 2));
+      ctx.lineTo(0, (h / 2));
+      this.labelPoint({x:0,y:h-5},`(0,${h})`);
+      this.labelPoint({x:w-50,y:15},`(${w},0)`);
+      ctx.stroke();
+    },
+
+    // change color and label a point with a letter.
+    labelPoint: function(p, label) {
+      let ctx = this.get("ctx");
+      ctx.font = "14px arial";
+      ctx.fillStyle = "#f00";
+      ctx.strokeStyle = "#f00";
+      ctx.strokeText(label, p.x, p.y);
+      ctx.fillStyle = "#000";
+      ctx.strokeStyle = "#000";
+    },
+
+    // run 'game', attached to go button
+    runChaosGame: function() {
+      this.clearCanvas();
+      this.drawShape();
+      this.chooseStart();
+      if (!this.get("animate")) {
+        this.loopPoints(this.get("runtime"));
+      } else {
+        let counter, runtime, m, interval;
+        // slows the drawing for a fun visual.
+        counter = 0;
+        runtime = this.get("runtime");
+        m = this.get("method");
+        interval = window.setInterval(() => {
+          let p1,p2,p3;
+          p1 = this.get("point");
+          p2 = this.chooseVertex();
+          if (m === "midpoint") {
+            p3 = this.getMidPoint(p1,p2);
+          } else if (m === "endpoint") {
+            p3 = this.getPoint(p1,p2);
+          }
+          this.drawPoint(p3,2);
+          counter++;
+          this.set({counter:counter, point: p3});
+          if (counter === runtime) {
+            window.clearInterval(interval);
+          } 
+        }, 25);
+        this.set({intervalID: interval});
+      }
+    },
+
+    stepThrough: function() {
+      let p1,p2,p3,p4;
+      p1 = this.get("point");
+      p2 = this.chooseVertex();
+      p3 = this.getMidPoint(p1,p2);
+      this.drawPoint(p3, 2, '#0d0');
+      p4 = this.getPoint(p1, p2);
+      this.drawPoint(p4, 2, '#0f0');
+      this.set({point: p4});
+    },
+
+    test: function() {
+      let p1, p2, p3;
+      p1 = this.get("point");
+      for (var i = 0; i < this.get("runtime"); i++) {
+        p2 = this.chooseVertex();
+        p3 = this.getPoint(p1, p2);
+        this.drawPoint(p3, 3, '#0d0');
+        p1 = p3;
+        this.set({point: p3});
+      }
+    },
+
+    clearCanvas: function() {
+      let h = this.get("height");
+      let w = this.get("width");
+      this.get("ctx").clearRect(-(w / 2), -(h / 2), w, h);
+      this.set({point: {x:0,y:0}});
+      this.drawAxes();
+    },
+
+    stopChaosGame: function() {
+      window.clearInterval(this.get("intervalID"));
+    },
+
+    // loop of drawing points.
+    loopPoints: function(runtime) {
+      let p1,p2,p3,m;
+      m = this.get("method");
+      p1 = this.get("point");
+      for (var i = 0; i < runtime; i++) {
+        p2 = this.chooseVertex();
+        if (m === "midpoint") {
+          p3 = this.getMidPoint(p1,p2);
+        } else if (m === "endpoint") {
+          p3 = this.getPoint(p1,p2);
+        }
+        this.drawPoint(p3,2);
+        p1 = p3;
+        this.set({point: p1});
+      }
+    }
+  },
+}
+</script>
