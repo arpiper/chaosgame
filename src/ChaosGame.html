@@ -1,38 +1,50 @@
 <div id="canvas-container">
   <div class="user-inputs">
     <div class="variables">
-      <label for="#vertices">Vertices:</label>
-      <select name="vertices" id="vertices" on:change="updateVertices(this.value)" bind:value="vertices">
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-        <option value="9">9</option>
-      </select>
-      <label for="runtime">Iterations:</label>
-      <input id="runtime" type="number" name="runtime" bind:value="runtime">
-      <label for="rule" >Proportion:{{ formatNum(rule, 2) }}</label>
-      <input id="rule" type="range" min="0" max="1" bind:value="rule" step="0.01" >
-      <input type="checkbox" checked id="animate" name="animate" on:change="animate()">
-      <label for="animate">Animate</label>
-      <input id="midpoint" type="radio" bind:group="method" name="midpoint" value="midpoint">
-      <label for ="midpoint">Method 1</label>
-      <input id="endpoint" type="radio" bind:group="method" name="endpoint" value="endpoint">
-      <label for="endpoint">Method 2</label>
-      <input type="button" value="Go" on:click="runChaosGame()">
-      <input type="button" value="Stop" on:click="stopChaosGame()">
-      <input type="button" value="Clear" on:click="drawShape()">
-      <input type="button" value="Step" on:click="stepThrough()">
+      <div>
+        <label for="#vertices">Vertices:</label>
+        <select name="vertices" id="vertices" on:change="updateVertices(this.value)" bind:value="vertices">
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+        </select>
+      </div>
+      <div>
+        <label for="runtime">Iterations:</label>
+        <input id="runtime" type="number" name="runtime" bind:value="runtime">
+      </div>
+      <div>
+        <label for="rule" >Proportion:{{ formatNum(rule, 2) }}</label>
+        <input id="rule" type="range" min="0" max="1" bind:value="rule" step="0.01" >
+      </div>
+      <div>
+        <input type="checkbox" checked id="animate" name="animate" on:change="animate()">
+        <label for="animate">Animate</label><br/>
+        <input id="midpoint" type="radio" bind:group="method" name="midpoint" value="midpoint">
+        <label for ="midpoint">Method 1</label><br />
+        <input id="endpoint" type="radio" bind:group="method" name="endpoint" value="endpoint">
+        <label for="endpoint">Method 2</label><br />
+      </div>
+      <div>
+        <input type="button" value="Go" on:click="runChaosGame()">
+        <input type="button" value="Stop" on:click="stopChaosGame()">
+        <input type="button" value="Clear" on:click="drawShape()">
+        <input type="button" value="Step" on:click="stepThrough()">
+      </div>
 
     </div>
 
     <div class="vertices">
       {{#each points as point, i}}
-        <span class="label">{{ indexToAlpha(i) }}:</span>
-        <input type="number" bind:value="point.x" id="point-{{i}}-x" on:change="drawShape()">
-        <input type="number" bind:value="point.y" id="point-{{i}}-y" on:change="drawShape()">
+        <div class="vertex">
+          <span class="label">{{ indexToAlpha(i) }}:</span>
+          <input type="number" bind:value="point.x" id="point-{{i}}-x" on:change="drawShape()">
+          <input type="number" bind:value="point.y" id="point-{{i}}-y" on:change="drawShape()">
+        </div>
       {{/each}}
     </div>
     <span >Iterations: {{ counter }}</span>
@@ -45,14 +57,26 @@
 #canvas-container {
   width: 100%;
   height: 100%;
+  display: grid;
+  grid-template-columns: [controls] 20% [canvas] 75% [end];
+  grid-template-rows: auto;
+  grid-row-gap: 10px;
+  align-items: center;
+  justify-content: stretch;
 }
 #chaos {
-  margin: 0 auto;
   display: block;
+  grid-column-start: canvas;
+  grid-column-end: end;
 }
 .user-inputs {
-  width: 80%;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-items: center;
+  grid-column-start: controls;
+  grid-column-end: canvas;
+  padding: 5px;
 }
 .user-inputs div {
   text-align: center;
@@ -63,6 +87,9 @@ input[type='number'] {
 }
 input[name='runtime'] {
   width: 75px;
+}
+.vertex {
+  display: inline-block;
 }
 </style>
 
@@ -91,7 +118,7 @@ export default {
     let ctx = c.getContext("2d");
     let container = document.getElementById("canvas-container");
     c.height = container.offsetHeight * .8;
-    c.width = container.offsetWidth* .8;
+    c.width = container.offsetWidth * .8;
     this.get("points").forEach((v,i) => {
       if (v.x > c.width/2 || v.x < -c.width/2) {
         v.x = c.width/4 * (v.x / Math.abs(v.x));

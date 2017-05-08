@@ -12,6 +12,12 @@ var entry = PRODUCTION
     "webpack-dev-server/client?http://localhost:8090"
   ];
 
+var plugins = PRODUCTION
+  ? []
+  : [
+    new webpack.HotModuleReplacementPlugin()
+  ];
+
 module.exports = {
   devtool: 'source-map',
   entry: entry,
@@ -20,6 +26,7 @@ module.exports = {
     publicPath: '/dist/',
     path: path.resolve(__dirname, "dist")
   },
+  plugins: plugins,
   module: {
     rules: [
       {
