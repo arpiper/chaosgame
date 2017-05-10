@@ -96,7 +96,7 @@ input[name='runtime'] {
 <script>
 export default {
   // computed values for some?
-  data() {
+  data () {
     return {
       height: 0,
       width: 0,
@@ -113,14 +113,14 @@ export default {
     };
   },
 
-  oncreate() {
+  oncreate () {
     let c = document.getElementById("chaos");
     let ctx = c.getContext("2d");
     let container = document.getElementById("canvas-container");
     c.height = container.offsetHeight * .8;
     c.width = container.offsetWidth * .8;
     this.get("points").forEach((v,i) => {
-      if (v.x > c.width/2 || v.x < -c.width/2) {
+      if (v.x > (c.width / 2) || v.x < (-c.width / 2)) {
         v.x = c.width/4 * (v.x / Math.abs(v.x));
       }
     });
@@ -130,7 +130,7 @@ export default {
     this.drawShape();
   },
 
-  ondestroy() {
+  ondestroy () {
   },
 
   helpers: {
@@ -342,5 +342,5 @@ export default {
       }
     }
   },
-}
+};
 </script>
