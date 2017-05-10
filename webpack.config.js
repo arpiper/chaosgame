@@ -24,21 +24,21 @@ var common = {
   },
 
   module: {
-    loaders: [
-      {
-        test: /\.(html|svelte)$/,
-        exclude: /node_modules/,
-        use: "svelte-loader"
-      },
+    rules: [
       {
         test: /\.(js)$/,
         exclude: /node_modules/,
         use: {
           loader: "babel-loader",
           query: {
-            presets: ["es2015", "stage-0"]
+            presets: ["es2015", "stage-0"],
           }
         }
+      },
+      {
+        test: /\.(html|svelte)$/,
+        exclude: /node_modules/,
+        use: "svelte-loader"
       }
     ]
   },
