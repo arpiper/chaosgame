@@ -6,7 +6,7 @@ var ENV = process.env.NODE_ENV || 'development';
 
 var common = {
   entry: {
-    'index': './src/index.js',
+    'chaosgame': './src/index.js',
   },
 
   output: {
