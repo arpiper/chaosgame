@@ -1,5 +1,4 @@
 var path = require("path");
-var webpack = require("webpack");
 var HtmlWebpackPlugin = require("html-webpack-plugin");
 var webpack = require("webpack");
 var merge = require('webpack-merge');
@@ -31,7 +30,6 @@ var common = {
           path.resolve(__dirname, "node_modules")
         ],
         include: [
-          path.resolve(__dirname, "dist"),
           path.resolve(__dirname, "src")
         ],
         use: {
