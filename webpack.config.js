@@ -7,7 +7,6 @@ var ENV = process.env.NODE_ENV || 'development';
 
 var common = {
   entry: {
-    'polyfills': 'babel-polyfill',
     'index': './src/index.js',
   },
 
@@ -25,9 +24,16 @@ var common = {
 
   module: {
     rules: [
+      
       {
-        test: /\.(js)$/,
-        exclude: /node_modules/,
+        test: /\.(js|html)$/,
+        exclude: [
+          path.resolve(__dirname, "node_modules")
+        ],
+        include: [
+          path.resolve(__dirname, "dist"),
+          path.resolve(__dirname, "src")
+        ],
         use: {
           loader: "babel-loader",
           query: {
@@ -39,15 +45,11 @@ var common = {
         test: /\.(html|svelte)$/,
         exclude: /node_modules/,
         use: "svelte-loader"
-      }
+      },
     ]
   },
 
   plugins: [
-    new webpack.optimize.CommonsChunkPlugin({
-      name: ['polyfills', 'vendor'].reverse()
-    }),
-
     new HtmlWebpackPlugin({
       chunksSortMode: 'dependency'
     })
@@ -58,7 +60,14 @@ var config;
 if (ENV === 'production') {
   // production
   config = merge(common, {
-     plugins: [
+    plugins: [
+      new webpack.optimize.UglifyJsPlugin({
+        beautify: false,
+        mangle: {
+          keep_fnames: true
+        },
+        comments: false
+      }),
       new webpack.LoaderOptionsPlugin({
         minimize: true,
         debug: false
@@ -68,14 +77,6 @@ if (ENV === 'production') {
           'NODE_ENV': JSON.stringify('production')
         }
       }),
-      new webpack.optimize.UglifyJsPlugin({
-        beautify: false,
-        //mangle: {
-        //  screw_ie8: true,
-        //  keep_fnames: true
-        //},
-        comments: false
-      })
     ],
   });
 } else {
