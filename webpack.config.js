@@ -50,6 +50,10 @@ var common = {
   },
 
   plugins: [
+    new webpack.optimize.CommonsChunkPlugin({
+      name: ['polyfills', 'vendor'].reverse()
+    }),
+
     new HtmlWebpackPlugin({
       chunksSortMode: 'dependency'
     })
