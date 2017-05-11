@@ -88,29 +88,12 @@ if (ENV === 'production') {
 
     entry:  [
       "./src/index.js",
-      "webpack/hot/dev-server",
-      "webpack-dev-server/client?http://localhost:8090"
     ],
-
-    output: {
-      path: path.join(__dirname, 'dist'),
-      filename: '[name].bundle.js',
-      publicPath: './dist/',
-      sourceMapFilename: '[name].map'
-    },
 
     plugins: [
       new webpack.HotModuleReplacementPlugin(),
     ],
     
-    devServer: {
-      port: 7777,
-      host: 'localhost',
-      historyApiFallback: true,
-      noInfo: false,
-      stats: 'minimal',
-      publicPath: './dist/', 
-    }
   });
 }
 
