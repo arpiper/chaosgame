@@ -70,10 +70,6 @@ if (ENV === 'production') {
         },
         comments: false
       }),
-      new webpack.LoaderOptionsPlugin({
-        minimize: true,
-        debug: false
-      }),
       new webpack.DefinePlugin({
         'process.env': {
           'NODE_ENV': JSON.stringify('production')
@@ -83,18 +79,39 @@ if (ENV === 'production') {
   });
 } else {
   // development
-  config = merge(common, {
-    devtool: 'cheap-module-source-map',
+  config = {
+    devtool: 'source-map',
 
-    entry:  [
+    entry: [
       "./src/index.js",
+      "webpack/hot/dev-server",
+      "webpack-dev-server/client?http://localhost:8090"
     ],
+
+    output: {
+      path: path.join(__dirname, 'dist'),
+      filename: 'bundle.js',
+      publicPath: '/dist/',
+    },
+
+    module: {
+      rules: [
+        {
+          test: /\.(html|svelte)$/,
+          exclude: /node_modules/,
+          use: "svelte-loader"
+        },
+        {
+          test: /\.(js|jsx)$/,
+          use: "babel-loader"
+        }
+      ]
+    },
 
     plugins: [
       new webpack.HotModuleReplacementPlugin(),
-    ],
-    
-  });
+    ]
+  };
 }
 
 module.exports = config;
