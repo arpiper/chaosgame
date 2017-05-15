@@ -48,13 +48,9 @@ var common = {
   },
 
   plugins: [
-    new webpack.optimize.CommonsChunkPlugin({
-      name: ['polyfills', 'vendor'].reverse()
-    }),
-
     new HtmlWebpackPlugin({
       chunksSortMode: 'dependency'
-    })
+    }),
   ]
 };
 
@@ -79,7 +75,7 @@ if (ENV === 'production') {
   });
 } else {
   // development
-  config = {
+  config = merge(common, {
     devtool: 'source-map',
 
     entry: [
@@ -94,24 +90,10 @@ if (ENV === 'production') {
       publicPath: '/dist/',
     },
 
-    module: {
-      rules: [
-        {
-          test: /\.(html|svelte)$/,
-          exclude: /node_modules/,
-          use: "svelte-loader"
-        },
-        {
-          test: /\.(js|jsx)$/,
-          use: "babel-loader"
-        }
-      ]
-    },
-
     plugins: [
       new webpack.HotModuleReplacementPlugin(),
     ]
-  };
+  });
 }
 
 module.exports = config;
