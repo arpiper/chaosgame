@@ -22,6 +22,8 @@
         <input id="rule" type="range" min="0" max="1" bind:value="rule" step="0.01" >
       </div>
       <div>
+        <input type="checkbox" checked id="showAxis" name="showAxis" on:change="showAxis('showAxis')">
+        <label for="showAxis">Show Axis</label><br/>
         <input type="checkbox" checked id="animate" name="animate" on:change="animate()">
         <label for="animate">Animate</label><br/>
         <input id="midpoint" type="radio" bind:group="method" name="midpoint" value="midpoint">
@@ -108,6 +110,7 @@ export default {
       intervalID: 0,
       counter: 0,
       animate: true, 
+      showAxis: true,
       rule: .5,
       method: "midpoint",
       selection: undefined,
@@ -127,7 +130,9 @@ export default {
     });
     ctx.translate(c.width / 2, c.height / 2);
     this.set({height: c.height, width: c.width, ctx: ctx});
-    this.drawAxis();
+    if (this.get("showAxis")) {
+      this.drawAxis();
+    }
     this.drawShape();
   },
 
@@ -147,6 +152,12 @@ export default {
     animate: function() {
       let a = this.get("animate");
       this.set({animate: !a});
+    },
+    
+    showAxis: function() {
+      let a = this.get("showAxis");
+      this.set({"showAxis": !a});
+      this.drawShape();
     },
 
     updateVertices: function(vertices) {
@@ -318,7 +329,9 @@ export default {
       let w = this.get("width");
       this.get("ctx").clearRect(-(w / 2), -(h / 2), w, h);
       this.set({point: {x:0,y:0}});
-      this.drawAxis();
+      if (this.get("showAxis")) {
+        this.drawAxis();
+      }
     },
 
     stopChaosGame: function() {
