@@ -1,5 +1,11 @@
 <div id="canvas-container">
-  <div class="user-inputs">
+  <div class="show-menu" >
+    <span on:click="showMenu()">Menu</span>
+    <input type="button" name="go" value="Go" on:click="runChaosGame()">
+    <input type="button" value="Stop" on:click="stopChaosGame()">
+    <input type="button" value="Clear" on:click="drawShape()">
+  </div>
+  <div class="user-inputs" ref:menu>
     <div class="variables">
       <div>
         <label for="#vertices">Vertices:</label>
@@ -41,17 +47,20 @@
     </div>
 
     <div class="vertices">
+      <div class="vertex">
+        <span class="coord">X</span>
+        <span class="coord">Y</span>
+      </div>
       {{#each points as point, i}}
         <div class="vertex">
           <span class="label">{{ indexToAlpha(i) }}:</span>
-          <input type="number" bind:value="point.x" id="point-{{i}}-x" on:change="drawShape()">
-          <input type="number" bind:value="point.y" id="point-{{i}}-y" on:change="drawShape()">
+          <input type="number" class="coord" bind:value="point.x" id="point-{{i}}-x" on:change="drawShape()">
+          <input type="number" class="coord" bind:value="point.y" id="point-{{i}}-y" on:change="drawShape()">
         </div>
       {{/each}}
     </div>
     <span >Iterations: {{ counter }}</span>
   </div>
-  <!--  -->
   <canvas id="chaos" on:mousedown="selectVertex(event)" on:mouseup="moveVertex(event)">
   </canvas>
 </div>
@@ -60,39 +69,67 @@
 #canvas-container {
   width: 100%;
   height: 100%;
-  display: grid;
-  grid-template-columns: [controls] 20% [canvas] 75% [end];
-  grid-template-rows: auto;
-  grid-row-gap: 10px;
+  display: flex;
   align-items: center;
   justify-content: stretch;
 }
 #chaos {
+  flex: 1 0 75%;
+  width: 100%;
   display: block;
-  grid-column-start: canvas;
-  grid-column-end: end;
 }
 .user-inputs {
+  flex: 0 1 20%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   justify-items: center;
-  grid-column-start: controls;
-  grid-column-end: canvas;
   padding: 5px;
 }
 .user-inputs div {
   text-align: center;
-}
-input[type='number'] {
-  width: 50px;
-  margin: 5px;
-}
-input[name='runtime'] {
-  width: 75px;
+  margin: 5px 0;
 }
 .vertex {
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
+.coord {
+  flex: 0 1 40%;
+  width: 40%
+}
+.show-menu {
+  display: none;
+}
+@media screen and (max-width: 720px) {
+  #canvas-container {
+    flex-direction: column;
+  }
+  #chaos {
+    flex: 1 0 calc(100% - 40px);
+  }
+  .user-inputs {
+    position: absolute;
+    top: 40px;
+    background-color: #dedede;
+    left: -110%;
+    transition: left 1s;
+    height: 100%;
+    flex: 1 0 90%
+  }
+  .show-menu {
+    display: flex;
+    background-color: #dedede;
+    padding: 5px;
+    width: 100%;
+    flex: 1 0 40px;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  .show-menu > input[name="go"] {
+    margin-left: auto;
+  }
 }
 </style>
 
@@ -150,6 +187,14 @@ export default {
   },
 
   methods: {
+    showMenu: function() {
+      if (this.refs.menu.style.left === "" || this.refs.menu.style.left === "-110%") {
+        this.refs.menu.style.left = "0";
+      } else {
+        this.refs.menu.style.left = "-110%";
+      }
+    },
+
     animate: function() {
       let a = this.get("animate");
       this.set({animate: !a});
