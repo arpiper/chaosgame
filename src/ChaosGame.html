@@ -51,6 +51,7 @@
     </div>
     <span >Iterations: {{ counter }}</span>
   </div>
+  <!--  -->
   <canvas id="chaos" on:mousedown="selectVertex(event)" on:mouseup="moveVertex(event)">
   </canvas>
 </div>
@@ -365,30 +366,45 @@ export default {
       p.forEach((v, i) => {
         if (v.x - 5 <= click.x && v.x + 5 >= click.x) {
           if (v.y - 5 <= click.y && v.y + 5 > click.y) {
-            selection = i;
-            document.addEventListener("mousemove", this.dragVertex);
+            this.set({selection: i});
+            let self = this;
+            document.addEventListener("mousemove", function _drag(e) {
+              self.dragVertex(e);
+            });
           }
         }
       });
-      if (selection != undefined) {
-        this.set({selection: selection});
-      }
     },
 
     moveVertex: function(evt) {
+      let s = this.get("selection");
+      if (s === undefined) {
+        return;
+      }
       let h = this.get("height");
       let w = this.get("width");
-      let s = this.get("selection");
       let p = this.get("points");
       let newp = {x: evt.offsetX - (w / 2), y: evt.offsetY - (h / 2)};
       p[s] = newp;
       this.set({points:p, selection:undefined});
       this.drawShape();
-      document.removeEventListener("mousemove", this.dragVertex);
+      document.removeEventListener("mousemove", function _drag(e) {
+        this.dragVertex(e);
+      });
     },
 
     dragVertex: function(evt) {
-      console.log(evt);
+      let s = this.get("selection");
+      if (s === undefined) {
+        return;
+      }
+      let p = this.get("points");
+      let w = this.get("width");
+      let h = this.get("height");
+      p[s].x = evt.offsetX - (w / 2);
+      p[s].y = evt.offsetY - (h / 2);
+      this.set({points:p});
+      this.drawShape();
     },
   },
 };
