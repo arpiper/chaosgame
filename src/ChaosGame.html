@@ -365,8 +365,8 @@ export default {
       p.forEach((v, i) => {
         if (v.x - 5 <= click.x && v.x + 5 >= click.x) {
           if (v.y - 5 <= click.y && v.y + 5 > click.y) {
-            console.log('clicked', v);
             selection = i;
+            document.addEventListener("mousemove", this.dragVertex);
           }
         }
       });
@@ -384,6 +384,11 @@ export default {
       p[s] = newp;
       this.set({points:p, selection:undefined});
       this.drawShape();
+      document.removeEventListener("mousemove", this.dragVertex);
+    },
+
+    dragVertex: function(evt) {
+      console.log(evt);
     },
   },
 };
