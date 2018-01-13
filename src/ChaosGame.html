@@ -61,7 +61,12 @@
     </div>
     <span >Iterations: {{ counter }}</span>
   </div>
-  <canvas id="chaos" on:mousedown="selectVertex(event)" on:mouseup="moveVertex(event)">
+  <canvas 
+    id="chaos" 
+    on:touchstart="selectVertex(event)" 
+    on:touchend="moveVertex(event)" 
+    on:mousedown="selectVertex(event)" 
+    on:mouseup="moveVertex(event)">
   </canvas>
 </div>
 
@@ -406,16 +411,30 @@ export default {
       let h = this.get("height");
       let w = this.get("width");
       let p = this.get("points");
-      let click = {x: evt.offsetX - (w / 2), y: evt.offsetY - (h / 2)};
-      let selection = undefined;
+      let click = {x: 0, y: 0};
+      if (evt.type === "touchstart") {
+        console.log(evt.type, evt);
+        click.x = evt.touches[0].pageX - evt.touches[0].target.offsetLeft;
+        click.y = evt.touches[0].pageY - evt.touches[0].target.offsetTop;
+      } else {
+        click.x = evt.offsetX - (w / 2), 
+        click.y = evt.offsetY - (h / 2);
+      }
+      console.log(click);
       p.forEach((v, i) => {
         if (v.x - 5 <= click.x && v.x + 5 >= click.x) {
           if (v.y - 5 <= click.y && v.y + 5 > click.y) {
             this.set({selection: i});
             let self = this;
-            document.addEventListener("mousemove", function _drag(e) {
-              self.dragVertex(e);
-            });
+            if (evt.type === "touchstart") {
+              document.addEventListener("touchmove", function _drag(e) {
+                self.dragVertex(e);
+              });
+            } else {
+              document.addEventListener("mousemove", function _drag(e) {
+                self.dragVertex(e);
+              });
+            }
           }
         }
       });
@@ -429,10 +448,18 @@ export default {
       let h = this.get("height");
       let w = this.get("width");
       let p = this.get("points");
-      let newp = {x: evt.offsetX - (w / 2), y: evt.offsetY - (h / 2)};
+      let newp = {x: 0, y: 0};
+      if (evt.type === "touchend") {
+        newp.x = evt.touches[0].pageX - evt.touches[0].target.offsetLeft;
+        newp.y = evt.touches[0].pageY - evt.touches[0].target.offsetTop;
+      } else {
+        newp.x = evt.offsetX - (w / 2);
+        newp.y = evt.offsetY - (h / 2);
+      }
       p[s] = newp;
       this.set({points:p, selection:undefined});
       this.drawShape();
+      // this doesn't work. kind find the right event listener for anonymous func.
       document.removeEventListener("mousemove", function _drag(e) {
         this.dragVertex(e);
       });
@@ -446,8 +473,13 @@ export default {
       let p = this.get("points");
       let w = this.get("width");
       let h = this.get("height");
-      p[s].x = evt.offsetX - (w / 2);
-      p[s].y = evt.offsetY - (h / 2);
+      if (evt.type === "touchmove") {
+        p[s].x = evt.touches[0].pageX - evt.touches[0].target.offsetLeft;
+        p[s].y = ect.touches[0].pageY - evt.touches[0].target.offsetTop;
+      } else {
+        p[s].x = evt.offsetX - (w / 2);
+        p[s].y = evt.offsetY - (h / 2);
+      }
       this.set({points:p});
       this.drawShape();
     },
