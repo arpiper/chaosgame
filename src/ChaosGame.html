@@ -64,7 +64,6 @@
   <canvas 
     id="chaos" 
     on:touchstart="selectVertex(event)" 
-    on:touchend="moveVertex(event)" 
     on:mousedown="selectVertex(event)" 
     on:mouseup="moveVertex(event)">
   </canvas>
@@ -79,8 +78,6 @@
   justify-content: stretch;
 }
 #chaos {
-  flex: 1 0 75%;
-  width: 100%;
   display: block;
 }
 .user-inputs {
@@ -166,13 +163,22 @@ export default {
     let container = document.getElementById("canvas-container");
     c.height = container.offsetHeight * .8;
     c.width = container.offsetWidth * .8;
-    this.get("points").forEach((v,i) => {
+    let mobile = window.getComputedStyle(document.querySelector(".show-menu"));
+    if (mobile.display !== "none") {
+      c.height = container.offsetHeight - 40;
+      c.width = container.offsetWidth;
+    }
+    let p = this.get("points");
+    p.forEach((v,i) => {
       if (v.x > (c.width / 2) || v.x < (-c.width / 2)) {
-        v.x = c.width/4 * (v.x / Math.abs(v.x));
+        p[i].x = (c.width / 4) * (v.x / Math.abs(v.x));
+      }
+      if (v.y > (c.height / 2) || v.y < (-c.height / 2)) {
+        p[i].y = (c.height / 4) * (v.y / Math.abs(v.y));
       }
     });
     ctx.translate(c.width / 2, c.height / 2);
-    this.set({height: c.height, width: c.width, ctx: ctx});
+    this.set({height: c.height, width: c.width, ctx: ctx, points: p});
     if (this.get("showAxis")) {
       this.drawAxis();
     }
@@ -408,19 +414,19 @@ export default {
     },
 
     selectVertex: function(evt) {
+      evt.preventDefault();
+      evt.stopPropagation();
       let h = this.get("height");
       let w = this.get("width");
       let p = this.get("points");
       let click = {x: 0, y: 0};
       if (evt.type === "touchstart") {
-        console.log(evt.type, evt);
-        click.x = evt.touches[0].pageX - evt.touches[0].target.offsetLeft;
-        click.y = evt.touches[0].pageY - evt.touches[0].target.offsetTop;
+        click.x = evt.touches[0].pageX - evt.touches[0].target.offsetLeft - (w / 2);
+        click.y = evt.touches[0].pageY - evt.touches[0].target.offsetTop - (h / 2);
       } else {
         click.x = evt.offsetX - (w / 2), 
         click.y = evt.offsetY - (h / 2);
       }
-      console.log(click);
       p.forEach((v, i) => {
         if (v.x - 5 <= click.x && v.x + 5 >= click.x) {
           if (v.y - 5 <= click.y && v.y + 5 > click.y) {
@@ -441,6 +447,8 @@ export default {
     },
 
     moveVertex: function(evt) {
+      evt.preventDefault();
+      evt.stopPropagation();
       let s = this.get("selection");
       if (s === undefined) {
         return;
@@ -450,8 +458,8 @@ export default {
       let p = this.get("points");
       let newp = {x: 0, y: 0};
       if (evt.type === "touchend") {
-        newp.x = evt.touches[0].pageX - evt.touches[0].target.offsetLeft;
-        newp.y = evt.touches[0].pageY - evt.touches[0].target.offsetTop;
+        newp.x = evt.touches[0].pageX - evt.touches[0].target.offsetLeft - (w / 2);
+        newp.y = evt.touches[0].pageY - evt.touches[0].target.offsetTop - (h / 2);
       } else {
         newp.x = evt.offsetX - (w / 2);
         newp.y = evt.offsetY - (h / 2);
@@ -474,8 +482,8 @@ export default {
       let w = this.get("width");
       let h = this.get("height");
       if (evt.type === "touchmove") {
-        p[s].x = evt.touches[0].pageX - evt.touches[0].target.offsetLeft;
-        p[s].y = ect.touches[0].pageY - evt.touches[0].target.offsetTop;
+        p[s].x = evt.touches[0].pageX - evt.touches[0].target.offsetLeft - (w / 2);
+        p[s].y = evt.touches[0].pageY - evt.touches[0].target.offsetTop - (h / 2);
       } else {
         p[s].x = evt.offsetX - (w / 2);
         p[s].y = evt.offsetY - (h / 2);
